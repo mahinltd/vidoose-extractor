@@ -6,53 +6,69 @@ import { spawn } from 'child_process';
  */
 export const extractMetadata = (videoUrl) => {
   return new Promise((resolve, reject) => {
-    // yt-dlp optimization flags for maximum speed
     const args = [
       '--dump-json',
-      '--no-playlist',           // Ensure only single video is processed
-      '--no-warnings',           // Skip warnings to improve execution speed
-      '--ignore-errors',         // Bypass non-fatal extraction errors
-      '--page-title',            // Disable unnecessary page title loading
-      videoUrl
+      '--no-playlist',
+      '--flat-playlist',
+      '--no-warnings',
+      '--ignore-errors',
+      videoUrl,
     ];
 
-    // Secure execution using child_process.spawn to prevent Command Injection
     const child = spawn('yt-dlp', args);
 
     let stdoutData = '';
     let stderrData = '';
+    let settled = false;
 
-    // Stream stdout data chunks
+    const rejectOnce = (error) => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      reject(error);
+    };
+
+    const resolveOnce = (data) => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      resolve(data);
+    };
+
     child.stdout.on('data', (data) => {
-      stdoutData += data;
+      stdoutData += data.toString();
     });
 
-    // Stream stderr data chunks
     child.stderr.on('data', (data) => {
-      stderrData += data;
+      stderrData += data.toString();
     });
 
-    // Handle process completion
     child.on('close', (code) => {
-      if (code !== 0 && !stdoutData) {
-        return reject(new Error(stderrData.trim() || 'yt-dlp failed to extract metadata.'));
+      const cleanStdout = stdoutData.trim();
+      const cleanStderr = stderrData.trim();
+
+      if (code !== 0) {
+        return rejectOnce(new Error(cleanStderr || cleanStdout || 'yt-dlp failed to extract metadata.'));
       }
 
       try {
-        if (!stdoutData.trim()) {
-          return reject(new Error('No metadata returned. The video might be private, deleted, or unsupported.'));
+        if (!cleanStdout) {
+          return rejectOnce(new Error(cleanStderr || 'No metadata returned. The video might be private, deleted, or unsupported.'));
         }
         
-        const parsedJson = JSON.parse(stdoutData);
-        resolve(parsedJson);
+        const parsedJson = JSON.parse(cleanStdout);
+        resolveOnce(parsedJson);
       } catch (parseError) {
-        reject(new Error('Failed to parse metadata payload.'));
+        rejectOnce(new Error(cleanStderr || 'Failed to parse metadata payload.'));
       }
     });
 
-    // Handle system or network errors during spawn
     child.on('error', (err) => {
-      reject(err);
+      rejectOnce(err);
     });
   });
 };
