@@ -6,15 +6,18 @@ import { spawn } from 'child_process';
  */
 export const extractMetadata = (videoUrl) => {
   return new Promise((resolve, reject) => {
+    const proxyUrl = process.env.YTDLP_PROXY_URL || '';
+
     const args = [
       '--dump-json',
       '--no-playlist',
       '--no-warnings',
-      '--flat-playlist',
-      '--force-ipv4', // Stay on stable IPv4 network
-      '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      '--referer', '[https://www.youtube.com/](https://www.youtube.com/)'
+      '--flat-playlist'
     ];
+
+    if (proxyUrl) {
+      args.push('--proxy', proxyUrl);
+    }
 
     args.push(videoUrl);
 
