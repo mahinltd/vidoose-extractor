@@ -7,6 +7,8 @@ import { spawn } from 'child_process';
 export const extractMetadata = (videoUrl) => {
   return new Promise((resolve, reject) => {
     const proxyUrl = process.env.YTDLP_PROXY_URL || '';
+    const igUser = process.env.INSTAGRAM_USER || '';
+    const igPass = process.env.INSTAGRAM_PASS || '';
 
     const args = [
       '--dump-json',
@@ -17,6 +19,12 @@ export const extractMetadata = (videoUrl) => {
 
     if (proxyUrl) {
       args.push('--proxy', proxyUrl);
+    }
+
+    // Dynamically inject Instagram auth variables if the incoming URL belongs to Instagram
+    if (videoUrl.includes('instagram.com') && igUser && igPass) {
+      args.push('--username', igUser);
+      args.push('--password', igPass);
     }
 
     args.push(videoUrl);
