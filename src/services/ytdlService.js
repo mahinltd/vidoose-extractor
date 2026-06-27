@@ -11,11 +11,9 @@ export const extractMetadata = (videoUrl) => {
       '--no-playlist',
       '--no-warnings',
       '--flat-playlist',
-      '--force-ipv6',
+      "--force-ipv6" // Keeps us safely on the clean IPv6 channel
     ];
 
-    // Bind to the full available IPv6 range to trigger automated multi-IP scaling
-    args.push('--source-address', '::/0');
     args.push(videoUrl);
 
     const child = spawn('yt-dlp', args);
