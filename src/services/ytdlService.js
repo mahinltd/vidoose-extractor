@@ -11,7 +11,9 @@ export const extractMetadata = (videoUrl) => {
       '--no-playlist',
       '--no-warnings',
       '--flat-playlist',
-      "--force-ipv6" // Keeps us safely on the clean IPv6 channel
+      '--force-ipv4', // Stay on stable IPv4 network
+      '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      '--referer', '[https://www.youtube.com/](https://www.youtube.com/)'
     ];
 
     args.push(videoUrl);
