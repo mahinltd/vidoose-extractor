@@ -7,7 +7,17 @@ import { extractMetadata } from '../services/ytdlService.js';
  */
 export const handleExtraction = async (req, res) => {
   try {
-    const { sanitizedUrl, isPremium, formatType } = req;
+    const requestBody = req.body ?? {};
+    const sanitizedUrl = req.sanitizedUrl || requestBody.sanitizedUrl || requestBody.url;
+    const isPremium = typeof req.isPremium === 'boolean' ? req.isPremium : Boolean(requestBody.isPremium);
+    const formatType = req.formatType || requestBody.formatType || 'video';
+
+    if (!sanitizedUrl) {
+      return res.status(400).json({
+        success: false,
+        error: 'A valid URL is required for extraction.',
+      });
+    }
 
     // 1. Fetch raw optimized metadata from yt-dlp service
     const rawData = await extractMetadata(sanitizedUrl);
