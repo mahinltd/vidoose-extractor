@@ -9,11 +9,14 @@ export const extractMetadata = (videoUrl) => {
     const args = [
       '--dump-json',
       '--no-playlist',
-      '--flat-playlist',
       '--no-warnings',
-      '--ignore-errors',
-      videoUrl,
+      '--flat-playlist',
+      '--force-ipv6',
     ];
+
+    // Bind to the full available IPv6 range to trigger automated multi-IP scaling
+    args.push('--source-address', '::/0');
+    args.push(videoUrl);
 
     const child = spawn('yt-dlp', args);
 
