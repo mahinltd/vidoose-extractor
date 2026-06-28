@@ -6,6 +6,33 @@ import fs from 'fs';
  * Optimized for Fast JSON Dumping (Zero-Buffer Pass-Through)
  */
 
+function resolvePlatformCookieFile(videoUrl) {
+  try {
+    const parsedUrl = new URL(videoUrl);
+    const hostname = parsedUrl.hostname.toLowerCase();
+
+    if (hostname.includes('youtube.com') || hostname.includes('youtu.be')) {
+      return '/var/www/vidoose-extractor/cookies/youtube.txt';
+    }
+
+    if (hostname.includes('instagram.com')) {
+      return '/var/www/vidoose-extractor/cookies/instagram.txt';
+    }
+
+    if (hostname.includes('facebook.com')) {
+      return '/var/www/vidoose-extractor/cookies/facebook.txt';
+    }
+
+    if (hostname.includes('twitter.com') || hostname.includes('x.com')) {
+      return '/var/www/vidoose-extractor/cookies/twitter.txt';
+    }
+
+    return null;
+  } catch (error) {
+    return null;
+  }
+}
+
 export const extractMetadata = async (videoUrl) => {
   const args = [
     '--dump-json',
@@ -15,10 +42,10 @@ export const extractMetadata = async (videoUrl) => {
     '--force-ipv6' // Force routing over our verified primary AWS IPv6 network
   ];
 
-  const cookieFile = process.env.YTDLP_COOKIE_FILE || process.env.YTDLP_COOKIES_FILE || '';
+  const cookieFile = resolvePlatformCookieFile(videoUrl);
   if (cookieFile && fs.existsSync(cookieFile)) {
     args.push('--cookies', cookieFile);
-    console.log(`[ytdlService] Injecting cookies from: ${cookieFile}`);
+    console.log(`[ytdlService] Injecting platform cookie file: ${cookieFile}`);
   }
 
   args.push(videoUrl);
