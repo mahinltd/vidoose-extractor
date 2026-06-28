@@ -33,6 +33,9 @@ export const extractMetadata = (videoUrl) => {
 
     if (cookieFile && fs.existsSync(cookieFile)) {
       args.push('--cookies', cookieFile);
+      console.log(`[ytdlService] Injecting cookie file: ${cookieFile}`);
+    } else if (cookieFile) {
+      console.log(`[ytdlService] Cookie file not found: ${cookieFile}`);
     }
 
     args.push(videoUrl);
