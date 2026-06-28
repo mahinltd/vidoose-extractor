@@ -6,18 +6,14 @@ import { spawn } from 'child_process';
  */
 export const extractMetadata = (videoUrl) => {
   return new Promise((resolve, reject) => {
-    const proxyUrl = process.env.YTDLP_PROXY_URL || '';
-
     const args = [
       '--dump-json',
       '--no-playlist',
       '--no-warnings',
-      '--flat-playlist'
+      '--flat-playlist',
+      '--force-ipv6',              // Force yt-dlp to route over IPv6
+      '--source-address', '::/0'   // Bind randomly to any IP within our global IPv6 subnet range
     ];
-
-    if (proxyUrl) {
-      args.push('--proxy', proxyUrl);
-    }
 
     args.push(videoUrl);
 
