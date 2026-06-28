@@ -1,4 +1,7 @@
 import { spawn } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 /**
  * Core Service to Extract Metadata Using yt-dlp
@@ -6,8 +9,6 @@ import { spawn } from 'child_process';
  */
 export const extractMetadata = (videoUrl) => {
   return new Promise((resolve, reject) => {
-    const proxyUrl = process.env.YTDLP_PROXY_URL || '';
-
     const args = [
       '--dump-json',
       '--no-playlist',
@@ -15,8 +16,23 @@ export const extractMetadata = (videoUrl) => {
       '--flat-playlist'
     ];
 
-    if (proxyUrl) {
-      args.push('--proxy', proxyUrl);
+    // Determine platform and resolve cookie file path (ESM compatible)
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+
+    let cookieFile = '';
+    if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
+      cookieFile = path.join(__dirname, '..', '..', 'cookies', 'youtube.txt');
+    } else if (videoUrl.includes('facebook.com')) {
+      cookieFile = path.join(__dirname, '..', '..', 'cookies', 'facebook.txt');
+    } else if (videoUrl.includes('instagram.com')) {
+      cookieFile = path.join(__dirname, '..', '..', 'cookies', 'instagram.txt');
+    } else if (videoUrl.includes('tiktok.com')) {
+      cookieFile = path.join(__dirname, '..', '..', 'cookies', 'tiktok.txt');
+    }
+
+    if (cookieFile && fs.existsSync(cookieFile)) {
+      args.push('--cookies', cookieFile);
     }
 
     args.push(videoUrl);
