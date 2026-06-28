@@ -39,7 +39,9 @@ export const extractMetadata = async (videoUrl) => {
     '--no-playlist',
     '--no-warnings',
     '--flat-playlist',
-    '--force-ipv6' // Force routing over our verified primary AWS IPv6 network
+    '--force-ipv6',
+    '--no-config',            // Bypass any system-wide or user yt-dlp config files
+    '--format', 'best'        // Accept the best available format safely for metadata dumping
   ];
 
   const cookieFile = resolvePlatformCookieFile(videoUrl);
