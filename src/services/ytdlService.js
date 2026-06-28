@@ -6,23 +6,13 @@ import fs from 'fs';
  * Optimized for Fast JSON Dumping (Zero-Buffer Pass-Through)
  */
 
-// Helper to generate a random IPv6 address within Tanvir Bhai's AWS Subnet
-function generateRandomIPv6() {
-  const prefix = '2406:da1c:4ab:5b8c';
-  const randomBlock = () => Math.floor(Math.random() * 65536).toString(16).padStart(4, '0');
-  return `${prefix}:${randomBlock()}:${randomBlock()}:${randomBlock()}:${randomBlock()}`;
-}
-
 export const extractMetadata = async (videoUrl) => {
-  const randomIp = generateRandomIPv6();
-
   const args = [
     '--dump-json',
     '--no-playlist',
     '--no-warnings',
     '--flat-playlist',
-    '--force-ipv6',
-    '--source-address', randomIp
+    '--force-ipv6' // Force routing over our verified primary AWS IPv6 network
   ];
 
   const cookieFile = process.env.YTDLP_COOKIE_FILE || process.env.YTDLP_COOKIES_FILE || '';
@@ -99,7 +89,7 @@ export const extractMetadata = async (videoUrl) => {
 
     if (shouldFallback) {
       console.log('[ytdlService] IPv6 bind failed, retrying without IPv6 flags.');
-      return executeYtdlp(args.filter((arg) => arg !== '--force-ipv6' && arg !== randomIp));
+      return executeYtdlp(args.filter((arg) => arg !== '--force-ipv6'));
     }
 
     throw error;
