@@ -1,4 +1,5 @@
 import { spawn } from 'child_process';
+import fs from 'fs';
 
 /**
  * Core Service to Extract Metadata Using yt-dlp
@@ -15,6 +16,18 @@ export const extractMetadata = (videoUrl) => {
 
     if (useIpv6) {
       args.push('--force-ipv6', '--source-address', '::/0');
+    }
+
+    const cookieFile = process.env.YTDLP_COOKIE_FILE || process.env.YTDLP_COOKIES_FILE || '';
+    const isYouTubeUrl = videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be');
+
+    if (cookieFile && isYouTubeUrl) {
+      if (fs.existsSync(cookieFile)) {
+        args.push('--cookies', cookieFile);
+        console.log(`[ytdlService] Injecting YouTube cookies from: ${cookieFile}`);
+      } else {
+        console.log(`[ytdlService] yt-dlp cookie file not found: ${cookieFile}`);
+      }
     }
 
     args.push(videoUrl);
