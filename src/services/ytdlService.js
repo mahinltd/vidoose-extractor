@@ -13,7 +13,9 @@ export const extractMetadata = (videoUrl) => {
       '--dump-json',
       '--no-playlist',
       '--no-warnings',
-      '--flat-playlist'
+      '--flat-playlist',
+      '--force-ipv6',              // Force yt-dlp to route over IPv6
+      '--source-address', '::/0'   // Bind randomly to any IP within our global IPv6 subnet range
     ];
 
     // Determine platform and resolve cookie file path (ESM compatible)
