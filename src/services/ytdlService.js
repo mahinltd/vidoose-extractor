@@ -6,16 +6,19 @@ import { spawn } from 'child_process';
  */
 export const extractMetadata = (videoUrl) => {
   return new Promise((resolve, reject) => {
+    const proxyUrl = process.env.YTDLP_PROXY_URL || '';
+
     const args = [
       '--dump-json',
       '--no-playlist',
       '--no-warnings',
-      '--flat-playlist',
-      '--force-ipv6',
+      '--flat-playlist'
     ];
 
-    // Bind to the full available IPv6 range to trigger automated multi-IP scaling
-    args.push('--source-address', '::/0');
+    if (proxyUrl) {
+      args.push('--proxy', proxyUrl);
+    }
+
     args.push(videoUrl);
 
     const child = spawn('yt-dlp', args);
