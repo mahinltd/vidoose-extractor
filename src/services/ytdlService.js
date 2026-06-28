@@ -5,32 +5,37 @@ import fs from 'fs';
  * Core Service to Extract Metadata Using yt-dlp
  * Optimized for Fast JSON Dumping (Zero-Buffer Pass-Through)
  */
-export const extractMetadata = (videoUrl) => {
-  const buildArgs = (useIpv6 = true) => {
-    const args = [
-      '--dump-json',
-      '--no-playlist',
-      '--no-warnings',
-      '--flat-playlist'
-    ];
 
-    if (useIpv6) {
-      args.push('--force-ipv6', '--source-address', '::/0');
-    }
+// Helper to generate a random IPv6 address within Tanvir Bhai's AWS Subnet
+function generateRandomIPv6() {
+  const prefix = '2406:da1c:4ab:5b8c';
+  const randomBlock = () => Math.floor(Math.random() * 65536).toString(16).padStart(4, '0');
+  return `${prefix}:${randomBlock()}:${randomBlock()}:${randomBlock()}:${randomBlock()}`;
+}
 
-    const cookieFile = process.env.YTDLP_COOKIE_FILE || process.env.YTDLP_COOKIES_FILE || '';
-    if (cookieFile && fs.existsSync(cookieFile)) {
-      args.push('--cookies', cookieFile);
-      console.log(`[ytdlService] Injecting cookies from: ${cookieFile}`);
-    }
+export const extractMetadata = async (videoUrl) => {
+  const randomIp = generateRandomIPv6();
 
-    args.push(videoUrl);
-    return args;
-  };
+  const args = [
+    '--dump-json',
+    '--no-playlist',
+    '--no-warnings',
+    '--flat-playlist',
+    '--force-ipv6',
+    '--source-address', randomIp
+  ];
 
-  const executeYtdlp = (args) => {
+  const cookieFile = process.env.YTDLP_COOKIE_FILE || process.env.YTDLP_COOKIES_FILE || '';
+  if (cookieFile && fs.existsSync(cookieFile)) {
+    args.push('--cookies', cookieFile);
+    console.log(`[ytdlService] Injecting cookies from: ${cookieFile}`);
+  }
+
+  args.push(videoUrl);
+
+  const executeYtdlp = (execArgs) => {
     return new Promise((resolve, reject) => {
-      const child = spawn('yt-dlp', args);
+      const child = spawn('yt-dlp', execArgs);
 
       let stdoutData = '';
       let stderrData = '';
@@ -88,13 +93,13 @@ export const extractMetadata = (videoUrl) => {
     });
   };
 
-  return executeYtdlp(buildArgs(true)).catch((error) => {
+  return executeYtdlp(args).catch((error) => {
     const message = error.message || '';
     const shouldFallback = message.includes('Name or service not known') || message.includes('TransportError');
 
     if (shouldFallback) {
       console.log('[ytdlService] IPv6 bind failed, retrying without IPv6 flags.');
-      return executeYtdlp(buildArgs(false));
+      return executeYtdlp(args.filter((arg) => arg !== '--force-ipv6' && arg !== randomIp));
     }
 
     throw error;
