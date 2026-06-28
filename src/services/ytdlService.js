@@ -1,7 +1,4 @@
 import { spawn } from 'child_process';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
 /**
  * Core Service to Extract Metadata Using yt-dlp
@@ -17,28 +14,6 @@ export const extractMetadata = (videoUrl) => {
       '--force-ipv6',              // Force yt-dlp to route over IPv6
       '--source-address', '::/0'   // Bind randomly to any IP within our global IPv6 subnet range
     ];
-
-    // Determine platform and resolve cookie file path (ESM compatible)
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = path.dirname(__filename);
-
-    let cookieFile = '';
-    if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
-      cookieFile = path.join(__dirname, '..', '..', 'cookies', 'youtube.txt');
-    } else if (videoUrl.includes('facebook.com')) {
-      cookieFile = path.join(__dirname, '..', '..', 'cookies', 'facebook.txt');
-    } else if (videoUrl.includes('instagram.com')) {
-      cookieFile = path.join(__dirname, '..', '..', 'cookies', 'instagram.txt');
-    } else if (videoUrl.includes('tiktok.com')) {
-      cookieFile = path.join(__dirname, '..', '..', 'cookies', 'tiktok.txt');
-    }
-
-    if (cookieFile && fs.existsSync(cookieFile)) {
-      args.push('--cookies', cookieFile);
-      console.log(`[ytdlService] Injecting cookie file: ${cookieFile}`);
-    } else if (cookieFile) {
-      console.log(`[ytdlService] Cookie file not found: ${cookieFile}`);
-    }
 
     args.push(videoUrl);
 
